@@ -6,11 +6,9 @@ from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 import joblib
 
-# Same random seed as before
 np.random.seed(42)
 n_samples = 5000
 
-# Recreate exactly the same synthetic data
 data = {
     'distance_km': np.random.uniform(10, 800, n_samples),
     'traffic_index': np.random.uniform(1, 10, n_samples),
@@ -25,39 +23,27 @@ data = {
 }
 
 df = pd.DataFrame(data)
-
-# Target variable
 df['efficiency_score'] = (
-    100
-    - 0.05 * df['distance_km']
-    - 3 * df['traffic_index']
-    + 2 * df['weather_score']
-    - 0.01 * df['shipment_weight_kg']
-    - 2 * df['num_stops']
-    + 1.5 * df['driver_experience_yrs']
+    100 - 0.05*df['distance_km'] - 3*df['traffic_index'] + 2*df['weather_score']
+    - 0.01*df['shipment_weight_kg'] - 2*df['num_stops'] + 1.5*df['driver_experience_yrs']
     + np.random.normal(0, 5, n_samples)
 )
 df['efficiency_score'] = df['efficiency_score'].clip(0, 100)
 
 X = df.drop('efficiency_score', axis=1)
 y = df['efficiency_score']
-
 categorical_cols = ['vehicle_type', 'time_of_day', 'day_of_week', 'route_type']
 numerical_cols = ['distance_km', 'traffic_index', 'weather_score', 'shipment_weight_kg', 'num_stops', 'driver_experience_yrs']
 
-preprocessor = ColumnTransformer(
-    transformers=[
-        ('num', StandardScaler(), numerical_cols),
-        ('cat', OneHotEncoder(drop='first', handle_unknown='ignore'), categorical_cols)
-    ])
+preprocessor = ColumnTransformer([
+    ('num', StandardScaler(), numerical_cols),
+    ('cat', OneHotEncoder(drop='first', handle_unknown='ignore'), categorical_cols)
+])
 
-model = Pipeline(steps=[
+model = Pipeline([
     ('preprocessor', preprocessor),
     ('regressor', RandomForestRegressor(n_estimators=200, max_depth=15, random_state=42, n_jobs=-1))
 ])
-
 model.fit(X, y)
-
-# Save the model
 joblib.dump(model, 'shipping_efficiency_model.pkl')
-print("✅ Model regenerated and saved as 'shipping_efficiency_model.pkl'")
+print("✅ Model regenerated successfully")
